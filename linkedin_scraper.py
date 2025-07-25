@@ -53,7 +53,8 @@ def scrape_connections():
     # --- Scroll until all are loaded ---
     loaded = 0
     scroll_attempts = 0
-    max_attempts = 20
+    max_attempts = 10
+
     while loaded < total_connections and scroll_attempts < max_attempts:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2.5)  # Increased wait time for slow loading

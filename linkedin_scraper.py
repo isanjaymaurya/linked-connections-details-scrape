@@ -40,10 +40,36 @@ def linkedin_login(email, password):
 def scrape_connections():
     driver.get('https://www.linkedin.com/mynetwork/invite-connect/connections/')
     time.sleep(5)
-    # Scroll to load more connections
-    for _ in range(10):  # Increased scrolls for more connections
-        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-        time.sleep(2)
+    # --- Get total connections ---
+    try:
+        header = driver.find_element(By.CSS_SELECTOR, '[componentkey="ConnectionsPage_ConnectionsListHeader"]')
+        total_connections = int(re.search(r'\d+', header.text.replace(',', '')).group())
+        print(f"Total connections: {total_connections}")
+    except Exception as e:
+        print("Could not find the connections header:", e)
+        driver.save_screenshot('connections_header_error.png')
+        return []
+
+    # --- Scroll until all are loaded ---
+    loaded = 0
+    scroll_attempts = 0
+    max_attempts = 20
+    while loaded < total_connections and scroll_attempts < max_attempts:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2.5)  # Increased wait time for slow loading
+        containers = driver.find_elements(By.CSS_SELECTOR, '[data-view-name="connections-list"]')
+        all_cards = []
+        for container in containers:
+            cards = container.find_elements(By.CSS_SELECTOR, 'div[componentkey^="auto-component"]')
+            all_cards.extend(cards)
+        new_loaded = len(all_cards)
+        print(f"Loaded {new_loaded} of {total_connections}")
+        if new_loaded == loaded:
+            scroll_attempts += 1
+        else:
+            scroll_attempts = 0
+        loaded = new_loaded
+
     data = []
     try:
         # Find all containers holding connections

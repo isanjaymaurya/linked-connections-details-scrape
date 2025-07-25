@@ -145,3 +145,6 @@ $RECYCLE.BIN/
 
 # Other
 *.log 
+
+# hide errors
+connections_header_error.png
